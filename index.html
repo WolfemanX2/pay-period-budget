@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Pay Period Budget</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E7C66">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Budget">
+<link rel="apple-touch-icon" href="apple-touch-icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4EF; --surface:#FFFFFF; --ink:#17262B; --muted:#5B6C6F; --line:#DCE3DB;
+  --accent:#0E7C66; --accent-ink:#FFFFFF; --soft:#E3EFEA; --warn:#A8690F; --bad:#B8412D; --track:#E4E9E3;
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --body:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1618; --surface:#182124; --ink:#E7EFEC; --muted:#94A6A5; --line:#2A3739;
+    --accent:#4FC3A1; --accent-ink:#06251D; --soft:#1C2C29; --warn:#E2A54A; --bad:#EE8B75; --track:#25312F;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1618; --surface:#182124; --ink:#E7EFEC; --muted:#94A6A5; --line:#2A3739;
+  --accent:#4FC3A1; --accent-ink:#06251D; --soft:#1C2C29; --warn:#E2A54A; --bad:#EE8B75; --track:#25312F;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--body);min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px 132px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:18px 0 6px}
+header.top h1{font:700 15px/1 var(--display);margin:0;color:var(--muted);letter-spacing:.01em}
+.icon-btn{background:none;border:1px solid var(--line);border-radius:12px;width:44px;height:44px;display:grid;place-items:center;color:var(--ink)}
+.icon-btn svg{width:22px;height:22px}
+.period-nav{display:flex;align-items:center;gap:10px}
+.period-nav .hero{flex:1;min-width:0;text-align:center}
+.period-nav .hero h2{font-size:clamp(26px,8vw,38px)}
+.period-nav .icon-btn{flex-shrink:0}
+
+/* Period hero */
+.hero h2{font:700 clamp(34px,10vw,46px)/1.02 var(--display);margin:8px 0 6px;letter-spacing:-.02em}
+.hero p{margin:0;color:var(--muted)}
+.runway{margin:22px 0 8px}
+.track{position:relative;height:44px}
+.track .bar{position:absolute;left:0;right:0;top:20px;height:4px;border-radius:2px;background:var(--track)}
+.track .fill{position:absolute;left:0;top:20px;height:4px;border-radius:2px;background:var(--accent)}
+.track .dot{position:absolute;top:13px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--surface);border:3px solid var(--warn)}
+.track .dot.past{border-color:var(--muted);opacity:.6}
+.track .now{position:absolute;top:6px;width:2px;height:32px;margin-left:-1px;background:var(--accent)}
+.ends{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+
+/* Sections */
+section{margin-top:28px}
+h3{font:700 19px/1.2 var(--display);margin:0 0 4px;letter-spacing:-.005em}
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sec-head h3{margin:0}
+.cols-btn{background:none;border:0;color:var(--accent);font-weight:600;font-size:13px;padding:8px 2px;min-height:36px}
+.colrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.colrow:last-child{border-bottom:0}
+.collabel{flex:1;min-width:0;min-height:40px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:15px}
+.colrow-actions{display:flex;gap:6px;flex-shrink:0}
+.colrow-actions button{width:40px;min-height:40px;padding:0;font-size:16px}
+.colrow-actions button:disabled{opacity:.3}
+.sub{color:var(--muted);font-size:14px;margin:0 0 12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{font-weight:600;font-size:13px;color:var(--muted);text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface)}
+td{padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th.num{text-align:right}
+tbody tr[data-edit]{cursor:pointer}
+tbody tr[data-edit]:active{background:var(--soft)}
+tr.past td{color:var(--muted)}
+.small{font-size:13px;color:var(--muted)}
+td a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.empty{padding:22px 16px;color:var(--muted)}
+.ledger{list-style:none;margin:0;padding:0}
+.ledger li{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.ledger li:last-child{border-bottom:0}
+.ledger .total{font-weight:600;background:var(--soft)}
+.neg{color:var(--bad)}
+
+/* Categories */
+.cats{display:grid;gap:10px}
+.cat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.cat-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.cat-name{font:700 18px/1.2 var(--display)}
+.cat-amt{font-variant-numeric:tabular-nums;font-size:15px}
+.meter{height:8px;border-radius:4px;background:var(--track);margin:10px 0 12px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.meter.over i{background:var(--bad)}
+.cat-actions{display:flex;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:0 16px;min-height:44px;font-weight:600}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--bad)}
+.btn.ghost{background:none}
+
+/* Nav + FAB */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav.tabs .in{display:flex;width:100%;max-width:560px}
+nav.tabs button{flex:1;background:none;border:0;padding:10px 4px 9px;display:grid;justify-items:center;gap:3px;font-size:12.5px;font-weight:500;color:var(--muted);min-height:58px}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
+.fab{position:fixed;right:max(16px,calc(50% - 264px));bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:4;background:var(--accent);color:var(--accent-ink);border:0;border-radius:16px;min-height:52px;padding:0 20px;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.22);display:flex;align-items:center;gap:8px}
+.fab svg{width:20px;height:20px}
+
+/* Sheet */
+.scrim{position:fixed;inset:0;background:rgba(10,20,20,.5);z-index:10;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom,0px));animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet h4{font:700 22px/1.2 var(--display);margin:0 0 14px}
+.field{margin-bottom:14px}
+.field label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.field input,.field select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-size:16px}
+.field .hint{font-size:13px;color:var(--muted);margin-top:5px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:flex;gap:10px;margin-top:18px}
+.actions .btn{flex:1}
+.actions .btn.danger{flex:0 0 auto}
+.divider{height:1px;background:var(--line);margin:20px 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:20;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 id="title">This Pay Period</h1>
+    <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+  <main id="app"></main>
+</div>
+<div id="fabHost"></div>
+<nav class="tabs" aria-label="Sections"><div class="in" id="tabs"></div></nav>
+<div id="sheetHost"></div>
+<div id="toastHost"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- date helpers (whole days since epoch, timezone-proof) ---------- */
+var DAY=86400000;
+function dayNum(y,m,d){return Math.floor(Date.UTC(y,m,d)/DAY)}
+function fromDay(n){return new Date(n*DAY)}
+function todayNum(){var t=new Date();return dayNum(t.getFullYear(),t.getMonth(),t.getDate())}
+function dim(y,m){return new Date(Date.UTC(y,m+1,0)).getUTCDate()}
+function clampDay(y,m,d){return dayNum(y,m,Math.min(d,dim(y,m)))}
+function isoOf(n){return fromDay(n).toISOString().slice(0,10)}
+function numOfIso(s){var p=String(s).split("-");return dayNum(+p[0],+p[1]-1,+p[2])}
+var WD=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var MO=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function fmtDate(n,withWd){var d=fromDay(n);return (withWd?WD[d.getUTCDay()].slice(0,3)+", ":"")+MO[d.getUTCMonth()].slice(0,3)+" "+d.getUTCDate()}
+function ord(n){var v=n%100;if(v>=11&&v<=13)return n+"th";var s={1:"st",2:"nd",3:"rd"}[n%10];return n+(s||"th")}
+function money(n){return (n||0).toLocaleString("en-US",{style:"currency",currency:"USD"})}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function uid(){return Math.random().toString(36).slice(2,10)}
+
+/* ---------- pay period logic ---------- */
+function getPeriod(s,today){
+  var wd=function(n){return fromDay(n).getUTCDay()};
+  if(s.schedule==="weekly"){
+    var back=(wd(today)-s.weekday+7)%7, st=today-back; return {start:st,end:st+7};
+  }
+  if(s.schedule==="biweekly"){
+    var k=Math.floor((today-s.anchor)/14), st2=s.anchor+14*k; return {start:st2,end:st2+14};
+  }
+  var t=fromDay(today), y=t.getUTCFullYear(), m=t.getUTCMonth(), days=[];
+  for(var i=-2;i<=2;i++){
+    days.push(clampDay(y,m+i,s.day1));
+    if(s.schedule==="semimonthly")days.push(clampDay(y,m+i,s.day2));
+  }
+  days.sort(function(a,b){return a-b});
+  var start=days[0], end=days[days.length-1], j;
+  for(j=0;j<days.length;j++){if(days[j]<=today)start=days[j]}
+  for(j=0;j<days.length;j++){if(days[j]>today){end=days[j];break}}
+  if(end<=start)end=start+1;
+  return {start:start,end:end};
+}
+function billDates(b,start,end){
+  var out=[], s=fromDay(start), e=fromDay(end-1);
+  var first=s.getUTCFullYear()*12+s.getUTCMonth(), last=e.getUTCFullYear()*12+e.getUTCMonth();
+  for(var k=first;k<=last;k++){
+    var yy=Math.floor(k/12), mm=k%12, d;
+    if(b.freq==="yearly"){ if(mm!==b.month)continue; }
+    d=clampDay(yy,mm,b.day);
+    if(d>=start&&d<end)out.push(d);
+  }
+  return out;
+}
+function scheduleLabel(s){
+  if(s.schedule==="weekly")return "Weekly, paid on "+WD[s.weekday]+"s";
+  if(s.schedule==="biweekly")return "Every other "+WD[fromDay(s.anchor).getUTCDay()];
+  if(s.schedule==="semimonthly")return "Twice a month, the "+ord(s.day1)+" and "+ord(s.day2);
+  return "Monthly, on the "+ord(s.day1);
+}
+
+/* ---------- state + storage ---------- */
+var KEY="ppb.v1";
+function seed(){
+  var B=function(n,a,d){return {id:uid(),name:n,amount:a,day:d,freq:"monthly",month:0}};
+  return {
+    v:1,
+    settings:{schedule:"weekly",weekday:1,anchor:dayNum(2026,8,21),day1:15,day2:31,checkingBalance:0},
+    bills:[],
+    cats:[
+      {id:uid(),name:"Groceries",budget:200,kind:"spend",auto:false},
+      {id:uid(),name:"Gas",budget:0,kind:"spend",auto:false},
+      {id:uid(),name:"Fun money",budget:75,kind:"spend",auto:true},
+      {id:uid(),name:"Savings",budget:125,kind:"save",auto:true}
+    ],
+    entries:[],
+    cards:[],
+    loans:[],
+    colOrder:{},
+    colLabels:{}
+  };
+}
+var S=null, ui={tab:"period",refDay:todayNum()};
+var store={kind:"local"}, saveT=null, saving=false, dirty=false;
+
+function normalize(o){
+  var d=seed(); if(!o||typeof o!=="object")return d;
+  o.settings=Object.assign(d.settings,o.settings||{});
+  o.bills=Array.isArray(o.bills)?o.bills:[]; o.cats=Array.isArray(o.cats)?o.cats:d.cats; o.entries=Array.isArray(o.entries)?o.entries:[];
+  o.cards=Array.isArray(o.cards)?o.cards:[]; o.loans=Array.isArray(o.loans)?o.loans:[];
+  o.colOrder=(o.colOrder&&typeof o.colOrder==="object")?o.colOrder:{};
+  o.colLabels=(o.colLabels&&typeof o.colLabels==="object")?o.colLabels:{};
+  var cutoff=todayNum()-400; o.entries=o.entries.filter(function(e){return e.date>=cutoff});
+  return o;
+}
+function readLocal(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  dirty=true; clearTimeout(saveT); saveT=setTimeout(flush,500);
+}
+function flush(){
+  if(store.kind!=="db"||!dirty)return;
+  if(saving){saveT=setTimeout(flush,300);return}
+  saving=true; dirty=false;
+  store.doc.set({json:JSON.stringify(S),updated:Date.now()}).catch(function(){store.failed=true}).then(function(){saving=false;if(dirty)flush()});
+}
+function initStore(){
+  var c=window.claude;
+  if(!c||!c.use)return Promise.resolve();
+  return Promise.all([c.use("db"),c.use("user")]).then(function(r){
+    var db=r[0],user=r[1]; if(!db||!user)return;
+    return user.id().then(function(id){
+      if(!id)return;
+      var doc=db.doc("data/users/"+id+"/budget");
+      return doc.get().then(function(snap){
+        store={kind:"db",doc:doc};
+        if(snap.exists&&snap.data()&&snap.data().json){
+          try{S=normalize(JSON.parse(snap.data().json));try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){};render()}catch(e){}
+        }else{dirty=true;flush()}
+      });
+    });
+  }).catch(function(){});
+}
+
+/* ---------- derived numbers ---------- */
+function periodInfo(){
+  var today=todayNum();
+  var ref=(ui.refDay==null)?today:ui.refDay;
+  var p=getPeriod(S.settings,ref);
+  var isCurrent=(today>=p.start&&today<p.end);
+  var items=[];
+  allBills().forEach(function(b){billDates(b,p.start,p.end).forEach(function(d){items.push({bill:b,date:d})})});
+  items.sort(function(a,b){return a.date-b.date||a.bill.name.localeCompare(b.bill.name)});
+  var due=items.reduce(function(t,i){return t+i.bill.amount},0);
+  var coming=items.filter(function(i){return i.date>=today}).reduce(function(t,i){return t+i.bill.amount},0);
+  return {today:today,start:p.start,end:p.end,items:items,due:due,coming:coming,daysLeft:p.end-today,isCurrent:isCurrent};
+}
+function spentIn(catId,p){
+  return S.entries.filter(function(e){return e.cat===catId&&e.date>=p.start&&e.date<p.end}).reduce(function(t,e){return t+e.amount},0);
+}
+function estInterest(balance,apr){return Math.round((balance||0)*((apr||0)/100)/12*100)/100}
+function minDue(k){return Math.max(0,Math.min(k.minPay||0,k.balance||0))}
+function cardDue(k){return k.payMode==="full"?(k.balance||0):minDue(k)}
+function cardBills(){
+  return S.cards.filter(function(k){return cardDue(k)>0}).map(function(k){
+    var label=k.payMode==="full"?" full balance":" minimum payment";
+    return {id:k.id,name:k.name+label,amount:cardDue(k),day:k.day,freq:"monthly",month:0,isCard:true,url:k.url};
+  });
+}
+function loanBills(){
+  return S.loans.filter(function(l){return(l.amountDue||0)>0}).map(function(l){
+    return {id:l.id,name:l.name+" payment",amount:l.amountDue,day:l.day,freq:"monthly",month:0,isLoan:true,url:l.url};
+  });
+}
+function allBills(){return S.bills.concat(cardBills()).concat(loanBills())}
+/** Months to pay off a balance with a fixed monthly payment at a given APR.
+ * Returns Infinity if the payment never covers the interest. */
+function payoffMonths(balance,apr,payment){
+  balance=balance||0; payment=payment||0;
+  if(balance<=0)return 0;
+  if(payment<=0)return Infinity;
+  var r=(apr||0)/100/12;
+  if(r<=0)return balance/payment;
+  if(payment<=balance*r)return Infinity;
+  return -Math.log(1-(balance*r)/payment)/Math.log(1+r);
+}
+function monthsFromNow(n){
+  var t=fromDay(todayNum()), y=t.getUTCFullYear(), m=t.getUTCMonth()+Math.ceil(n);
+  y+=Math.floor(m/12); m=((m%12)+12)%12;
+  return MO[m].slice(0,3)+" "+y;
+}
+function payoffLabel(balance,apr,payment){
+  var n=payoffMonths(balance,apr,payment);
+  return isFinite(n)?monthsFromNow(n):"—";
+}
+/** New balance after a month's interest accrues and a payment is applied. */
+function applyPayment(balance,apr,payment){
+  return Math.max(0,Math.round(((balance||0)+estInterest(balance,apr)-(payment||0))*100)/100);
+}
+
+/* ---------- table columns (user-reorderable) ---------- */
+var COLS={
+  period:[{k:"bill",label:"Bill",align:"left"},{k:"amount",label:"Amount",align:"num"},{k:"due",label:"Due",align:"num"}],
+  spend:[{k:"date",label:"Date",align:"left"},{k:"what",label:"What",align:"left"},{k:"amount",label:"Amount",align:"num"}],
+  bills:[{k:"desc",label:"Description",align:"left"},{k:"amount",label:"Amount Due",align:"num"},{k:"due",label:"Due Date",align:"num"}],
+  cards:[{k:"desc",label:"Description",align:"left"},{k:"balance",label:"Balance",align:"num"},{k:"limit",label:"Limit",align:"num"},{k:"apr",label:"APR",align:"num"},{k:"pay",label:"Monthly Payment",align:"num"},{k:"due",label:"Due Date",align:"num"},{k:"interest",label:"Est. Interest",align:"num"}],
+  loans:[{k:"desc",label:"Description",align:"left"},{k:"initial",label:"Initial Balance",align:"num"},{k:"balance",label:"Balance Remaining",align:"num"},{k:"amount",label:"Amount Due",align:"num"},{k:"due",label:"Due Date",align:"num"},{k:"apr",label:"Interest Rate",align:"num"},{k:"payoff",label:"Est. Payoff Date",align:"num"}]
+};
+function tableTitle(k){return {period:"Bills Due This Pay Period",spend:"Logged This Pay Period",bills:"All Bills",cards:"Credit Cards",loans:"Loans"}[k]}
+function colsFor(tableKey){
+  var defs=COLS[tableKey], byKey={}; defs.forEach(function(c){byKey[c.k]=c});
+  var order=(S.colOrder&&S.colOrder[tableKey])?S.colOrder[tableKey].filter(function(k){return byKey[k]}):defs.map(function(c){return c.k});
+  defs.forEach(function(c){if(order.indexOf(c.k)===-1)order.push(c.k)});
+  var overrides=(S.colLabels&&S.colLabels[tableKey])||{};
+  return order.map(function(k){
+    var c=byKey[k];
+    return overrides[k]?{k:c.k,label:overrides[k],align:c.align}:c;
+  });
+}
+function thRow(cols){return '<tr>'+cols.map(function(c){return '<th'+(c.align==="num"?' class="num"':'')+'>'+esc(c.label)+'</th>'}).join("")+'</tr>';}
+function tdRow(cols,cellMap,attrs){return '<tr'+(attrs||"")+'>'+cols.map(function(c){return '<td'+(c.align==="num"?' class="num"':'')+'>'+(cellMap[c.k]!==undefined?cellMap[c.k]:"")+'</td>'}).join("")+'</tr>';}
+function colsBtn(tableKey){return '<button class="cols-btn" data-cols="'+tableKey+'">Columns</button>';}
+
+/* ---------- icons ---------- */
+var IC={
+  period:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  spend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v12H3z"/><path d="M3 11h18M7 15h3"/></svg>',
+  bills:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  cards:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.2"/><path d="M2.5 9.8h19"/><path d="M6 14.3h5"/></svg>'
+};
+
+/* ---------- views ---------- */
+function viewPeriod(){
+  var P=periodInfo(), s=S.settings;
+  var len=P.end-P.start, pct=Math.max(0,Math.min(100,(P.today-P.start)/len*100));
+  var dots=P.items.map(function(i){
+    var x=(i.date-P.start)/len*100;
+    return '<span class="dot'+(i.date<P.today?" past":"")+'" style="left:'+x.toFixed(2)+'%"></span>';
+  }).join("");
+  var lastDay=P.end-1;
+  var pCols=colsFor("period");
+  var rows=P.items.map(function(i){
+    var cellMap={bill:esc(i.bill.name),amount:money(i.bill.amount),due:fmtDate(i.date,true)};
+    return tdRow(pCols,cellMap,i.date<P.today?' class="past"':'');
+  }).join("");
+  var table=P.items.length
+    ? '<div class="panel" style="overflow-x:auto"><table><thead>'+thRow(pCols)+'</thead><tbody>'+rows+'</tbody></table></div>'
+    : '<div class="panel"><div class="empty">No bills fall in this pay period.</div></div>';
+  var manual=S.cats.filter(function(c){return !c.auto});
+  var remaining=manual.reduce(function(t,c){return t+Math.max(0,(c.budget||0)-spentIn(c.id,P))},0);
+  var left=s.checkingBalance-P.coming-remaining;
+  var ledger=(s.checkingBalance>0&&P.isCurrent)
+    ? '<section><h3>Checking Account</h3><p class="sub">Your balance minus bills still to come and what\'s left of your non-transferred budgets. Categories that move to another account on payday aren\'t subtracted — that money is already gone from checking.</p><ul class="ledger panel">'
+      +'<li><span>Checking Balance</span><span class="num">'+money(s.checkingBalance)+'</span></li>'
+      +'<li><span>Bills Still to Come</span><span class="num">−'+money(P.coming)+'</span></li>'
+      +(manual.length?'<li><span>'+esc(manual.map(function(c){return c.name}).join(", "))+' Left to Spend</span><span class="num">−'+money(remaining)+'</span></li>':'')
+      +'<li class="total"><span>Left in Checking</span><span class="num'+(left<0?' neg':'')+'">'+money(left)+'</span></li></ul></section>'
+    : '';
+  var statusTxt;
+  if(P.isCurrent){statusTxt=P.daysLeft===1?"1 day left":P.daysLeft+" days left"}
+  else if(P.today<P.start){var until=P.start-P.today;statusTxt=until===1?"Starts tomorrow":"Starts in "+until+" days"}
+  else{var since=P.today-(P.end-1);statusTxt=since===1?"Ended yesterday":"Ended "+since+" days ago"}
+  var yr=function(n){return fromDay(n).getUTCFullYear()};
+  var range=fmtDate(P.start)+' – '+fmtDate(lastDay)+(yr(P.start)!==yr(P.today)||yr(lastDay)!==yr(P.today)?', '+yr(lastDay):'');
+  var chev=function(d){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="'+(d==="prev"?'M15 5l-7 7 7 7':'M9 5l7 7-7 7')+'"/></svg>'};
+  var runway=P.isCurrent
+    ? '<div class="runway" aria-hidden="true"><div class="track"><div class="bar"></div><div class="fill" style="width:'+pct.toFixed(2)+'%"></div>'+dots+'<div class="now" style="left:'+pct.toFixed(2)+'%"></div></div>'
+      +'<div class="ends"><span>Payday '+fmtDate(P.start)+'</span><span>Next Payday '+fmtDate(P.end)+'</span></div></div>'
+    : '<p class="sub" style="margin:14px 0 0"><button class="btn" data-period="today">Back to Current Pay Period</button></p>';
+  return '<div class="period-nav"><button class="icon-btn" data-period="prev" aria-label="Previous Pay Period">'+chev("prev")+'</button>'
+    +'<div class="hero"><h2>'+range+'</h2><p>'+esc(scheduleLabel(s))+' · '+statusTxt+'</p></div>'
+    +'<button class="icon-btn" data-period="next" aria-label="Next Pay Period">'+chev("next")+'</button></div>'
+    +runway
+    +'<section><div class="sec-head"><h3>Bills Due This Pay Period</h3>'+colsBtn("period")+'</div><p class="sub">'+money(P.due)+' total'+(P.coming>0?' · '+money(P.coming)+' still to come':'')+'</p>'+table+'</section>'
+    +ledger;
+}
+
+function viewSpend(){
+  var P=periodInfo();
+  var cards=S.cats.map(function(c){
+    var sp=spentIn(c.id,P), b=c.budget||0, pct=b>0?Math.min(100,sp/b*100):0, over=b>0&&sp>b;
+    var word=c.kind==="save"?"saved":"spent";
+    var amt=b>0?money(sp)+' of '+money(b)+' '+word:money(sp)+' '+word;
+    var rem=b>0?(over?'<span class="neg">'+money(sp-b)+' over</span>':money(b-sp)+' left'):'No budget set';
+    return '<div class="cat"><div class="cat-head"><span class="cat-name">'+esc(c.name)+'</span><span class="cat-amt">'+rem+'</span></div>'
+      +'<div class="meter'+(over?' over':'')+'"><i style="width:'+pct.toFixed(1)+'%"></i></div>'
+      +'<div class="cat-head"><span class="small">'+amt+'</span><span class="cat-actions"><button class="btn ghost" data-editcat="'+c.id+'">Edit</button><button class="btn primary" data-addentry="'+c.id+'">Add</button></span></div></div>';
+  }).join("");
+  var ents=S.entries.filter(function(e){return e.date>=P.start&&e.date<P.end}).sort(function(a,b){return b.date-a.date});
+  var nm={}; S.cats.forEach(function(c){nm[c.id]=c.name});
+  var eCols=colsFor("spend");
+  var rows=ents.map(function(e){
+    var cellMap={date:fmtDate(e.date),what:esc(e.note||"—")+'<div class="small">'+esc(nm[e.cat]||"Removed category")+'</div>',amount:money(e.amount)};
+    return tdRow(eCols,cellMap,' data-edit="'+e.id+'" data-entry="1"');
+  }).join("");
+  var tbl=ents.length
+    ? '<div class="panel" style="overflow-x:auto"><table><thead>'+thRow(eCols)+'</thead><tbody>'+rows+'</tbody></table></div>'
+    : '<div class="panel"><div class="empty">Nothing logged yet this pay period. Tap Add on a category.</div></div>';
+  return '<div class="hero"><h2>Spending</h2><p>Budgets reset each pay period ('+fmtDate(P.start)+' – '+fmtDate(P.end-1)+').</p></div>'
+    +'<section><div class="cats">'+cards+'</div><p style="margin:12px 0 0"><button class="btn" id="newCat">New Category</button></p></section>'
+    +'<section><div class="sec-head"><h3>Logged This Pay Period</h3>'+colsBtn("spend")+'</div><p class="sub">Tap a row to change or remove it.</p>'+tbl+'</section>';
+}
+
+function viewBills(){
+  var list=allBills().sort(function(a,b){return (a.freq===b.freq?0:(a.freq==="monthly"?-1:1))||a.day-b.day||a.name.localeCompare(b.name)});
+  var monthly=list.reduce(function(t,b){return t+(b.freq==="yearly"?b.amount/12:b.amount)},0);
+  var bCols=colsFor("bills");
+  var rows=list.map(function(b){
+    var due=b.freq==="yearly"?MO[b.month].slice(0,3)+" "+b.day+" Yearly":ord(b.day);
+    var name;
+    var nm=b.url?'<a href="'+esc(b.url)+'" target="_blank" rel="noopener noreferrer" data-link="1">'+esc(b.name)+'</a>':esc(b.name);
+    var src=b.isCard?"From Cards":b.isLoan?"From Loans":"";
+    name=src?nm+'<div class="small">'+src+'</div>':nm;
+    var attr=b.isCard?' data-card="1"':b.isLoan?' data-loan="1"':' data-bill="1"';
+    var cellMap={desc:name,amount:money(b.amount),due:due};
+    return tdRow(bCols,cellMap,' data-edit="'+b.id+'"'+attr);
+  }).join("");
+  var tbl=list.length
+    ? '<div class="panel" style="overflow-x:auto"><table><thead>'+thRow(bCols)+'</thead><tbody>'+rows+'</tbody></table></div>'
+    : '<div class="panel"><div class="empty">No bills yet. Tap Add Bill to start your master list.</div></div>';
+  return '<div class="hero"><h2>All Bills</h2><p>About '+money(monthly)+' a month across '+list.length+' bills, including card and loan payments.</p></div>'
+    +'<section><div class="sec-head" style="justify-content:flex-end">'+colsBtn("bills")+'</div>'+tbl+'</section>';
+}
+
+function viewCardsLoans(){
+  var cards=S.cards.slice().sort(function(a,b){return a.day-b.day||a.name.localeCompare(b.name)});
+  var bal=S.cards.reduce(function(t,k){return t+(k.balance||0)},0);
+  var lim=S.cards.reduce(function(t,k){return t+(k.limit||0)},0);
+  var interest=S.cards.reduce(function(t,k){return t+estInterest(k.balance,k.apr)},0);
+  var util=lim>0?Math.round(bal/lim*100):0;
+  var kCols=colsFor("cards");
+  var cardRows=cards.map(function(k){
+    var name=k.url?'<a href="'+esc(k.url)+'" target="_blank" rel="noopener noreferrer" data-link="1">'+esc(k.name)+'</a>':esc(k.name);
+    var payLbl=k.payMode==="full"?"Full Balance":"Minimum";
+    var cellMap={desc:name,balance:money(k.balance),limit:money(k.limit),apr:(k.apr||0).toFixed(2)+"%",pay:money(cardDue(k))+'<div class="small">'+payLbl+'</div>',due:ord(k.day),interest:money(estInterest(k.balance,k.apr))};
+    return tdRow(kCols,cellMap,' data-edit="'+k.id+'" data-card="1"');
+  }).join("");
+  var cardTbl=cards.length
+    ? '<div class="panel" style="overflow-x:auto"><table><thead>'+thRow(kCols)+'</thead><tbody>'+cardRows+'</tbody></table></div>'
+    : '<div class="panel"><div class="empty">No credit cards yet. Tap Add Card to start tracking them.</div></div>';
+  var cardSub=cards.length?money(bal)+' owed of '+money(lim)+' available'+(lim>0?' · '+util+'% used':'')+' · about '+money(interest)+' in interest this month':'Track balances, limits and what interest is costing you.';
+
+  var loans=S.loans.slice().sort(function(a,b){return a.day-b.day||a.name.localeCompare(b.name)});
+  var loanBal=S.loans.reduce(function(t,l){return t+(l.balance||0)},0);
+  var lCols=colsFor("loans");
+  var loanRows=loans.map(function(l){
+    var name=l.url?'<a href="'+esc(l.url)+'" target="_blank" rel="noopener noreferrer" data-link="1">'+esc(l.name)+'</a>':esc(l.name);
+    var cellMap={desc:name,initial:money(l.initial),balance:money(l.balance),amount:money(l.amountDue),due:ord(l.day),apr:(l.apr||0).toFixed(2)+"%",payoff:payoffLabel(l.balance,l.apr,l.amountDue)};
+    return tdRow(lCols,cellMap,' data-edit="'+l.id+'" data-loan="1"');
+  }).join("");
+  var loanTbl=loans.length
+    ? '<div class="panel" style="overflow-x:auto"><table><thead>'+thRow(lCols)+'</thead><tbody>'+loanRows+'</tbody></table></div>'
+    : '<div class="panel"><div class="empty">No loans yet. Tap Add Loan to start tracking them.</div></div>';
+  var loanSub=loans.length?money(loanBal)+' remaining across '+loans.length+(loans.length===1?' loan':' loans'):'Track balances, payments and when they\'ll be paid off.';
+
+  return '<div class="hero"><h2>Cards &amp; Loans</h2><p>Credit cards and loans, and what they cost you each month.</p></div>'
+    +'<section><div class="sec-head"><h3>Credit Cards</h3>'+colsBtn("cards")+'</div><p class="sub">'+cardSub+'</p>'+cardTbl+'<p style="margin:12px 0 0"><button class="btn" id="addCardBtn">Add Card</button></p></section>'
+    +'<section><div class="sec-head"><h3>Loans</h3>'+colsBtn("loans")+'</div><p class="sub">'+loanSub+'</p>'+loanTbl+'<p style="margin:12px 0 0"><button class="btn" id="addLoanBtn">Add Loan</button></p></section>';
+}
+
+function render(){
+  var titles={period:"This Pay Period",spend:"Spending",bills:"Master Bill List",cards:"Cards & Loans"};
+  document.getElementById("title").textContent=titles[ui.tab];
+  var views={period:viewPeriod,spend:viewSpend,bills:viewBills,cards:viewCardsLoans};
+  document.getElementById("app").innerHTML=views[ui.tab]();
+  var tabs=[["period","This Period"],["spend","Spending"],["bills","All Bills"],["cards","Cards & Loans"]];
+  document.getElementById("tabs").innerHTML=tabs.map(function(t){
+    return '<button data-tab="'+t[0]+'"'+(ui.tab===t[0]?' aria-current="page"':'')+'>'+IC[t[0]]+'<span>'+t[1]+'</span></button>';
+  }).join("");
+  var fab={bills:["addBill","Add Bill"]}[ui.tab];
+  document.getElementById("fabHost").innerHTML=fab?'<button class="fab" id="'+fab[0]+'">'+IC.plus+fab[1]+'</button>':"";
+}
+
+/* ---------- sheets ---------- */
+function toast(msg){
+  var h=document.getElementById("toastHost"); h.innerHTML='<div class="toast" role="status">'+esc(msg)+'</div>';
+  setTimeout(function(){h.innerHTML=""},2400);
+}
+function closeSheet(){document.getElementById("sheetHost").innerHTML=""}
+function openSheet(inner){
+  var h=document.getElementById("sheetHost");
+  h.innerHTML='<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true">'+inner+'</div></div>';
+  document.getElementById("scrim").addEventListener("mousedown",function(e){if(e.target.id==="scrim")closeSheet()});
+  var first=h.querySelector("input,select"); if(first&&first.type!=="date")first.focus({preventScroll:true});
+}
+function val(id){return document.getElementById(id).value}
+function options(arr,sel){return arr.map(function(o){return '<option value="'+o[0]+'"'+(String(o[0])===String(sel)?' selected':'')+'>'+esc(o[1])+'</option>'}).join("")}
+
+function billSheet(id){
+  var b=id?S.bills.filter(function(x){return x.id===id})[0]:{name:"",amount:"",day:1,freq:"monthly",month:0,url:""};
+  var days=[];for(var i=1;i<=31;i++)days.push([i,ord(i)]);
+  var months=MO.map(function(m,i){return [i,m]});
+  openSheet('<h4>'+(id?"Edit Bill":"Add Bill")+'</h4>'
+    +'<div class="field"><label for="bName">Description</label><input id="bName" value="'+esc(b.name)+'" autocomplete="off" placeholder="Internet"></div>'
+    +'<div class="field"><label for="bLink">Link (Optional)</label><input id="bLink" type="url" value="'+esc(b.url||"")+'" autocomplete="off" placeholder="https://…" inputmode="url"><div class="hint">Opens from the bill\'s name. A website works, or an app\'s own link (e.g. venmo://, chase://) opens straight into that app on your phone.</div></div>'
+    +'<div class="field"><label for="bAmt">Amount Due</label><input id="bAmt" inputmode="decimal" value="'+(b.amount===""?"":b.amount)+'" placeholder="0.00"></div>'
+    +'<div class="field"><label for="bFreq">Repeats</label><select id="bFreq">'+options([["monthly","Every Month"],["yearly","Once a Year"]],b.freq)+'</select></div>'
+    +'<div class="row2"><div class="field" id="mWrap"><label for="bMonth">Month</label><select id="bMonth">'+options(months,b.month)+'</select></div>'
+    +'<div class="field"><label for="bDay">Due on the</label><select id="bDay">'+options(days,b.day)+'</select></div></div>'
+    +'<div class="actions">'+(id?'<button class="btn danger" id="delBill">Delete</button>':'')+'<button class="btn" id="cancel">Cancel</button><button class="btn primary" id="saveBill">Save</button></div>');
+  var sync=function(){document.getElementById("mWrap").style.display=val("bFreq")==="yearly"?"":"none"};
+  document.getElementById("bFreq").addEventListener("change",sync); sync();
+  document.getElementById("cancel").onclick=closeSheet;
+  document.getElementById("saveBill").onclick=function(){
+    var name=val("bName").trim(), amt=parseFloat(val("bAmt").replace(/[$,]/g,"")), url=val("bLink").trim();
+    if(!name){toast("Add a description");return}
+    if(isNaN(amt)||amt<0){toast("Enter the amount due");return}
+    if(url&&!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url))url="https://"+url;
+    var rec={name:name,amount:Math.round(amt*100)/100,freq:val("bFreq"),month:+val("bMonth"),day:+val("bDay"),url:url};
+    if(id){Object.assign(b,rec)}else{rec.id=uid();S.bills.push(rec)}
+    save();closeSheet();render();
+  };
+  if(id)document.getElementById("delBill").onclick=function(){
+    S.bills=S.bills.filter(function(x){return x.id!==id});save();closeSheet();render();toast("Bill deleted");
+  };
+}
+
+function entrySheet(entryId,catId){
+  var e=entryId?S.entries.filter(function(x){return x.id===entryId})[0]:{cat:catId||(S.cats[0]&&S.cats[0].id),amount:"",note:"",date:todayNum()};
+  if(!S.cats.length){toast("Add a category first");return}
+  openSheet('<h4>'+(entryId?"Edit Entry":"Add to a Category")+'</h4>'
+    +'<div class="field"><label for="eCat">Category</label><select id="eCat">'+options(S.cats.map(function(c){return [c.id,c.name]}),e.cat)+'</select></div>'
+    +'<div class="field"><label for="eAmt">Amount</label><input id="eAmt" inputmode="decimal" value="'+(e.amount===""?"":e.amount)+'" placeholder="0.00"></div>'
+    +'<div class="field"><label for="eNote">Note (Optional)</label><input id="eNote" value="'+esc(e.note)+'" autocomplete="off" placeholder="Fry\'s, fuel stop, coffee"></div>'
+    +'<div class="field"><label for="eDate">Date</label><input id="eDate" type="date" value="'+isoOf(e.date)+'"></div>'
+    +'<div class="actions">'+(entryId?'<button class="btn danger" id="delEntry">Delete</button>':'')+'<button class="btn" id="cancel">Cancel</button><button class="btn primary" id="saveEntry">Save</button></div>');
+  document.getElementById("cancel").onclick=closeSheet;
+  document.getElementById("saveEntry").onclick=function(){
+    var amt=parseFloat(val("eAmt").replace(/[$,]/g,""));
+    if(isNaN(amt)||amt<=0){toast("Enter an amount");return}
+    if(!val("eDate")){toast("Pick a date");return}
+    var rec={cat:val("eCat"),amount:Math.round(amt*100)/100,note:val("eNote").trim(),date:numOfIso(val("eDate"))};
+    if(entryId){Object.assign(e,rec)}else{rec.id=uid();S.entries.push(rec)}
+    save();closeSheet();render();
+  };
+  if(entryId)document.getElementById("delEntry").onclick=function(){
+    S.entries=S.entries.filter(function(x){return x.id!==entryId});save();closeSheet();render();toast("Entry deleted");
+  };
+}
+
+function catSheet(id){
+  var c=id?S.cats.filter(function(x){return x.id===id})[0]:{name:"",budget:"",kind:"spend",auto:false};
+  openSheet('<h4>'+(id?"Edit Category":"New Category")+'</h4>'
+    +'<div class="field"><label for="cName">Name</label><input id="cName" value="'+esc(c.name)+'" autocomplete="off" placeholder="Groceries"></div>'
+    +'<div class="field"><label for="cBudget">Budget Each Pay Period</label><input id="cBudget" inputmode="decimal" value="'+(c.budget===""?"":c.budget)+'" placeholder="0.00"></div>'
+    +'<div class="field"><label for="cKind">Type</label><select id="cKind">'+options([["spend","Spending (Money Out)"],["save","Savings (Money Set Aside)"]],c.kind)+'</select></div>'
+    +'<div class="field"><label for="cAuto">Checking Balance Math</label><select id="cAuto">'+options([["0","Comes Out of Checking — Subtract It"],["1","Moves to Another Account Automatically — Already Gone"]],c.auto?"1":"0")+'</select><div class="hint">Only affects the "Left in Checking" total on This Period.</div></div>'
+    +'<div class="actions">'+(id?'<button class="btn danger" id="delCat">Delete</button>':'')+'<button class="btn" id="cancel">Cancel</button><button class="btn primary" id="saveCat">Save</button></div>');
+  document.getElementById("cancel").onclick=closeSheet;
+  document.getElementById("saveCat").onclick=function(){
+    var name=val("cName").trim(), b=parseFloat(val("cBudget").replace(/[$,]/g,""));
+    if(!name){toast("Add a name");return}
+    var rec={name:name,budget:isNaN(b)||b<0?0:Math.round(b*100)/100,kind:val("cKind"),auto:val("cAuto")==="1"};
+    if(id){Object.assign(c,rec)}else{rec.id=uid();S.cats.push(rec)}
+    save();closeSheet();render();
+  };
+  if(id)document.getElementById("delCat").onclick=function(){
+    if(!confirm("Delete this category and everything logged in it?"))return;
+    S.cats=S.cats.filter(function(x){return x.id!==id});S.entries=S.entries.filter(function(e){return e.cat!==id});
+    save();closeSheet();render();toast("Category deleted");
+  };
+}
+
+function cardSheet(id){
+  var k=id?S.cards.filter(function(x){return x.id===id})[0]:{name:"",balance:"",limit:"",apr:"",minPay:"",payMode:"min",day:1,url:""};
+  var days=[];for(var i=1;i<=31;i++)days.push([i,ord(i)]);
+  openSheet('<h4>'+(id?"Edit Card":"Add Card")+'</h4>'
+    +'<div class="field"><label for="kName">Description</label><input id="kName" value="'+esc(k.name)+'" autocomplete="off" placeholder="Chase Sapphire"></div>'
+    +'<div class="field"><label for="kLink">Link (Optional)</label><input id="kLink" type="url" value="'+esc(k.url||"")+'" autocomplete="off" placeholder="https://…" inputmode="url"><div class="hint">Opens from the card\'s name. A website works, or the issuer\'s app link (e.g. chase://) opens straight into that app on your phone.</div></div>'
+    +'<div class="row2"><div class="field"><label for="kBal">Current Balance</label><input id="kBal" inputmode="decimal" value="'+(k.balance===""?"":k.balance)+'" placeholder="0.00"></div>'
+    +'<div class="field"><label for="kLimit">Credit Limit</label><input id="kLimit" inputmode="decimal" value="'+(k.limit===""?"":k.limit)+'" placeholder="0.00"></div></div>'
+    +'<div class="row2"><div class="field"><label for="kApr">APR</label><input id="kApr" inputmode="decimal" value="'+(k.apr===""?"":k.apr)+'" placeholder="0.00"></div>'
+    +'<div class="field"><label for="kDay">Due on the</label><select id="kDay">'+options(days,k.day)+'</select></div></div>'
+    +'<div class="field"><label for="kMinPay">Minimum Payment (Optional)</label><input id="kMinPay" inputmode="decimal" value="'+(k.minPay===""?"":k.minPay)+'" placeholder="0.00"></div>'
+    +'<div class="field"><label for="kPayMode">Monthly Payment</label><select id="kPayMode">'+options([["min","Pay the Minimum"],["full","Pay in Full"]],k.payMode||"min")+'</select><div class="hint">Which amount counts toward All Bills and your checking math. Pay in Full uses the current balance.</div></div>'
+    +'<p class="sub" style="margin:-4px 0 14px">Estimated interest this month: <strong id="kEst">'+money(estInterest(k.balance,k.apr))+'</strong></p>'
+    +(id?('<div class="field" id="payBox"><label for="kPayAmt">Log Payment</label><div class="row2"><input id="kPayAmt" inputmode="decimal" value="'+cardDue(k)+'" placeholder="0.00"><button class="btn" id="logPay" type="button">Record Payment</button></div><div class="hint">Subtracts this payment (after estimated interest) from the current balance.</div></div>'):"")
+    +'<div class="actions">'+(id?'<button class="btn danger" id="delCard">Delete</button>':'')+'<button class="btn" id="cancel">Cancel</button><button class="btn primary" id="saveCard">Save</button></div>');
+  var refresh=function(){
+    var b=parseFloat(val("kBal").replace(/[$,]/g,"")), a=parseFloat(val("kApr").replace(/[$,]/g,""));
+    document.getElementById("kEst").textContent=money(estInterest(isNaN(b)?0:b,isNaN(a)?0:a));
+  };
+  document.getElementById("kBal").addEventListener("input",refresh);
+  document.getElementById("kApr").addEventListener("input",refresh);
+  document.getElementById("cancel").onclick=closeSheet;
+  if(id)document.getElementById("logPay").onclick=function(){
+    var p=parseFloat(val("kPayAmt").replace(/[$,]/g,""));
+    if(isNaN(p)||p<=0){toast("Enter a payment amount");return}
+    var curBal=parseFloat(val("kBal").replace(/[$,]/g,"")); if(isNaN(curBal))curBal=k.balance||0;
+    var curApr=parseFloat(val("kApr").replace(/[$,]/g,"")); if(isNaN(curApr))curApr=k.apr||0;
+    var newBal=applyPayment(curBal,curApr,p);
+    k.balance=newBal;
+    save();
+    document.getElementById("kBal").value=newBal;
+    document.getElementById("kEst").textContent=money(estInterest(newBal,curApr));
+    document.getElementById("kPayAmt").value=cardDue(k);
+    render();
+    toast("Payment recorded — new balance "+money(newBal));
+  };
+  document.getElementById("saveCard").onclick=function(){
+    var name=val("kName").trim(), b=parseFloat(val("kBal").replace(/[$,]/g,"")), l=parseFloat(val("kLimit").replace(/[$,]/g,"")), a=parseFloat(val("kApr").replace(/[$,]/g,"")), m=parseFloat(val("kMinPay").replace(/[$,]/g,"")), url=val("kLink").trim();
+    if(!name){toast("Add a description");return}
+    if(isNaN(b)||b<0){toast("Enter the current balance");return}
+    if(url&&!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url))url="https://"+url;
+    var rec={name:name,balance:Math.round(b*100)/100,limit:isNaN(l)||l<0?0:Math.round(l*100)/100,apr:isNaN(a)||a<0?0:Math.round(a*100)/100,minPay:isNaN(m)||m<0?0:Math.round(m*100)/100,payMode:val("kPayMode"),day:+val("kDay"),url:url};
+    if(id){Object.assign(k,rec)}else{rec.id=uid();S.cards.push(rec)}
+    save();closeSheet();render();
+  };
+  if(id)document.getElementById("delCard").onclick=function(){
+    S.cards=S.cards.filter(function(x){return x.id!==id});save();closeSheet();render();toast("Card deleted");
+  };
+}
+
+function loanSheet(id){
+  var l=id?S.loans.filter(function(x){return x.id===id})[0]:{name:"",initial:"",balance:"",amountDue:"",apr:"",day:1,url:""};
+  var days=[];for(var i=1;i<=31;i++)days.push([i,ord(i)]);
+  openSheet('<h4>'+(id?"Edit Loan":"Add Loan")+'</h4>'
+    +'<div class="field"><label for="lName">Description</label><input id="lName" value="'+esc(l.name)+'" autocomplete="off" placeholder="Car loan"></div>'
+    +'<div class="field"><label for="lLink">Link (Optional)</label><input id="lLink" type="url" value="'+esc(l.url||"")+'" autocomplete="off" placeholder="https://…" inputmode="url"><div class="hint">Opens from the loan\'s name. A website works, or the lender\'s app link opens straight into that app on your phone.</div></div>'
+    +'<div class="row2"><div class="field"><label for="lInit">Initial Balance</label><input id="lInit" inputmode="decimal" value="'+(l.initial===""?"":l.initial)+'" placeholder="0.00"></div>'
+    +'<div class="field"><label for="lBal">Balance Remaining</label><input id="lBal" inputmode="decimal" value="'+(l.balance===""?"":l.balance)+'" placeholder="0.00"></div></div>'
+    +'<div class="row2"><div class="field"><label for="lAmt">Amount Due</label><input id="lAmt" inputmode="decimal" value="'+(l.amountDue===""?"":l.amountDue)+'" placeholder="0.00"></div>'
+    +'<div class="field"><label for="lDay">Due on the</label><select id="lDay">'+options(days,l.day)+'</select></div></div>'
+    +'<div class="field"><label for="lApr">Interest Rate (APR)</label><input id="lApr" inputmode="decimal" value="'+(l.apr===""?"":l.apr)+'" placeholder="0.00"></div>'
+    +'<p class="sub" style="margin:-4px 0 14px">Estimated payoff date: <strong id="lPayoff">'+payoffLabel(l.balance,l.apr,l.amountDue)+'</strong></p>'
+    +(id?('<div class="field" id="payBox"><label for="lPayAmt">Log Payment</label><div class="row2"><input id="lPayAmt" inputmode="decimal" value="'+(l.amountDue||0)+'" placeholder="0.00"><button class="btn" id="logPay" type="button">Record Payment</button></div><div class="hint">Subtracts this payment (after estimated interest) from the balance remaining.</div></div>'):"")
+    +'<div class="actions">'+(id?'<button class="btn danger" id="delLoan">Delete</button>':'')+'<button class="btn" id="cancel">Cancel</button><button class="btn primary" id="saveLoan">Save</button></div>');
+  var refresh=function(){
+    var b=parseFloat(val("lBal").replace(/[$,]/g,"")), a=parseFloat(val("lApr").replace(/[$,]/g,"")), p=parseFloat(val("lAmt").replace(/[$,]/g,""));
+    document.getElementById("lPayoff").textContent=payoffLabel(isNaN(b)?0:b,isNaN(a)?0:a,isNaN(p)?0:p);
+  };
+  document.getElementById("lBal").addEventListener("input",refresh);
+  document.getElementById("lApr").addEventListener("input",refresh);
+  document.getElementById("lAmt").addEventListener("input",refresh);
+  document.getElementById("cancel").onclick=closeSheet;
+  if(id)document.getElementById("logPay").onclick=function(){
+    var p=parseFloat(val("lPayAmt").replace(/[$,]/g,""));
+    if(isNaN(p)||p<=0){toast("Enter a payment amount");return}
+    var curBal=parseFloat(val("lBal").replace(/[$,]/g,"")); if(isNaN(curBal))curBal=l.balance||0;
+    var curApr=parseFloat(val("lApr").replace(/[$,]/g,"")); if(isNaN(curApr))curApr=l.apr||0;
+    var curAmt=parseFloat(val("lAmt").replace(/[$,]/g,"")); if(isNaN(curAmt))curAmt=l.amountDue||0;
+    var newBal=applyPayment(curBal,curApr,p);
+    l.balance=newBal;
+    save();
+    document.getElementById("lBal").value=newBal;
+    document.getElementById("lPayoff").textContent=payoffLabel(newBal,curApr,curAmt);
+    render();
+    toast("Payment recorded — new balance "+money(newBal));
+  };
+  document.getElementById("saveLoan").onclick=function(){
+    var name=val("lName").trim(), init=parseFloat(val("lInit").replace(/[$,]/g,"")), bal=parseFloat(val("lBal").replace(/[$,]/g,"")), amt=parseFloat(val("lAmt").replace(/[$,]/g,"")), a=parseFloat(val("lApr").replace(/[$,]/g,"")), url=val("lLink").trim();
+    if(!name){toast("Add a description");return}
+    if(isNaN(bal)||bal<0){toast("Enter the balance remaining");return}
+    if(url&&!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url))url="https://"+url;
+    var rec={name:name,initial:isNaN(init)||init<0?bal:Math.round(init*100)/100,balance:Math.round(bal*100)/100,amountDue:isNaN(amt)||amt<0?0:Math.round(amt*100)/100,apr:isNaN(a)||a<0?0:Math.round(a*100)/100,day:+val("lDay"),url:url};
+    if(id){Object.assign(l,rec)}else{rec.id=uid();S.loans.push(rec)}
+    save();closeSheet();render();
+  };
+  if(id)document.getElementById("delLoan").onclick=function(){
+    S.loans=S.loans.filter(function(x){return x.id!==id});save();closeSheet();render();toast("Loan deleted");
+  };
+}
+
+function columnsSheet(tableKey){
+  var defs=COLS[tableKey], byKey={}; defs.forEach(function(c){byKey[c.k]=c});
+  var order=colsFor(tableKey).map(function(c){return c.k});
+  var overrides=(S.colLabels&&S.colLabels[tableKey])||{};
+  var labels={}; defs.forEach(function(c){labels[c.k]=overrides[c.k]||c.label});
+  var renderList=function(){
+    var rows=order.map(function(k,i){
+      return '<div class="colrow"><input class="collabel" data-k="'+k+'" value="'+esc(labels[k])+'" placeholder="'+esc(byKey[k].label)+'" aria-label="Rename '+esc(byKey[k].label)+'"><span class="colrow-actions">'
+        +'<button class="btn ghost" data-i="'+i+'" data-dir="up"'+(i===0?' disabled':'')+' aria-label="Move '+esc(byKey[k].label)+' up">↑</button>'
+        +'<button class="btn ghost" data-i="'+i+'" data-dir="down"'+(i===order.length-1?' disabled':'')+' aria-label="Move '+esc(byKey[k].label)+' down">↓</button>'
+        +'</span></div>';
+    }).join("");
+    var host=document.getElementById("colList"); host.innerHTML=rows;
+    var btns=host.querySelectorAll("button[data-dir]");
+    for(var n=0;n<btns.length;n++){(function(btn){
+      btn.onclick=function(){
+        var i=+btn.dataset.i, j=btn.dataset.dir==="up"?i-1:i+1;
+        if(j<0||j>=order.length)return;
+        var tmp=order[i]; order[i]=order[j]; order[j]=tmp;
+        renderList();
+      };
+    })(btns[n]);}
+    var inputs=host.querySelectorAll(".collabel");
+    for(var m=0;m<inputs.length;m++){(function(inp){
+      inp.addEventListener("input",function(){labels[inp.dataset.k]=inp.value;});
+    })(inputs[m]);}
+  };
+  openSheet('<h4>Columns</h4><p class="sub">'+esc(tableTitle(tableKey))+' · rename or reorder</p><div id="colList"></div>'
+    +'<div class="actions"><button class="btn" id="colReset">Reset to Default</button><button class="btn primary" id="colDone">Done</button></div>');
+  renderList();
+  document.getElementById("colReset").onclick=function(){
+    order=defs.map(function(c){return c.k});
+    defs.forEach(function(c){labels[c.k]=c.label});
+    renderList();
+  };
+  document.getElementById("colDone").onclick=function(){
+    S.colOrder=S.colOrder||{}; S.colOrder[tableKey]=order.slice();
+    S.colLabels=S.colLabels||{}; var out={};
+    order.forEach(function(k){
+      var v=(labels[k]||"").trim();
+      if(v&&v!==byKey[k].label)out[k]=v;
+    });
+    S.colLabels[tableKey]=out;
+    save(); closeSheet(); render();
+  };
+}
+
+function settingsSheet(){
+  var s=S.settings, days=[];for(var i=1;i<=31;i++)days.push([i,i===31?"31st (or Last Day)":ord(i)]);
+  var wds=WD.map(function(w,i){return [i,w]});
+  openSheet('<h4>Settings</h4>'
+    +'<div class="field"><label for="sSched">Pay Schedule</label><select id="sSched">'+options([["weekly","Weekly"],["biweekly","Every Two Weeks"],["semimonthly","Twice a Month"],["monthly","Monthly"]],s.schedule)+'</select></div>'
+    +'<div class="field" id="fWd"><label for="sWd">Payday</label><select id="sWd">'+options(wds,s.weekday)+'</select></div>'
+    +'<div class="field" id="fAnchor"><label for="sAnchor">A Recent or Upcoming Payday</label><input id="sAnchor" type="date" value="'+isoOf(s.anchor)+'"><div class="hint">Pick any payday so the app knows which weeks you get paid.</div></div>'
+    +'<div class="row2"><div class="field" id="fD1"><label for="sD1" id="lD1">Payday of the Month</label><select id="sD1">'+options(days,s.day1)+'</select></div>'
+    +'<div class="field" id="fD2"><label for="sD2">Second Payday</label><select id="sD2">'+options(days,s.day2)+'</select></div></div>'
+    +'<div class="field"><label for="sBal">Checking Account Balance (Optional)</label><input id="sBal" inputmode="decimal" value="'+(s.checkingBalance||"")+'" placeholder="0.00"><div class="hint">Update this whenever you check your bank app — it\'s not linked to your bank.</div></div>'
+    +'<div class="actions"><button class="btn" id="cancel">Cancel</button><button class="btn primary" id="saveSet">Save</button></div>'
+    +'<div class="divider"></div>'
+    +'<div class="field"><label>Backup</label><div class="actions" style="margin-top:0"><button class="btn" id="exp">Save Backup File</button><button class="btn" id="imp">Restore From File</button></div>'
+    +'<input type="file" id="impFile" accept=".json,application/json" hidden>'
+    +'<div class="hint">'+(store.kind==="db"?"Your data is saved privately to your account.":"Your data is saved on this device only. Save a backup now and then.")+'</div></div>'
+    +'<div class="field"><button class="btn danger" id="clearBills">Delete All Bills</button></div>');
+  var sync=function(){
+    var k=val("sSched");
+    var show=function(id,on){document.getElementById(id).style.display=on?"":"none"};
+    show("fWd",k==="weekly"); show("fAnchor",k==="biweekly"); show("fD1",k==="semimonthly"||k==="monthly"); show("fD2",k==="semimonthly");
+    document.getElementById("lD1").textContent=k==="semimonthly"?"First Payday":"Payday of the Month";
+  };
+  document.getElementById("sSched").addEventListener("change",sync); sync();
+  document.getElementById("cancel").onclick=closeSheet;
+  document.getElementById("saveSet").onclick=function(){
+    var n=parseFloat(val("sBal").replace(/[$,]/g,""));
+    s.schedule=val("sSched"); s.weekday=+val("sWd");
+    if(val("sAnchor"))s.anchor=numOfIso(val("sAnchor"));
+    s.day1=+val("sD1"); s.day2=+val("sD2"); s.checkingBalance=isNaN(n)||n<0?0:Math.round(n*100)/100;
+    save();closeSheet();render();
+  };
+  document.getElementById("exp").onclick=function(){
+    var fname="budget-backup-"+isoOf(todayNum())+".json", json=JSON.stringify(S,null,2);
+    var c=window.claude&&window.claude.use;
+    if(!c){
+      try{var blob=new Blob([json],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");
+        a.href=u;a.download=fname;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);toast("Backup saved")}
+      catch(e){toast("Couldn't save the backup")}
+      return;
+    }
+    window.claude.use("downloads").then(function(dl){
+      if(!dl){toast("Backup isn't available here");return}
+      return dl.save({filename:fname,data:json}).then(function(){toast("Backup saved")},function(e){if(!e||e.code!=="declined")toast("Couldn't save the backup")});
+    });
+  };
+  document.getElementById("imp").onclick=function(){document.getElementById("impFile").click()};
+  document.getElementById("impFile").addEventListener("change",function(ev){
+    var f=ev.target.files&&ev.target.files[0]; if(!f)return;
+    var r=new FileReader();
+    r.onload=function(){
+      try{var o=JSON.parse(r.result); if(!o||!Array.isArray(o.bills))throw 0;
+        if(!confirm("Replace everything in the app with this backup?"))return;
+        S=normalize(o);save();closeSheet();render();toast("Backup restored");
+      }catch(e){toast("That file isn't a valid backup")}
+    };
+    r.readAsText(f);
+  });
+  document.getElementById("clearBills").onclick=function(){
+    if(!confirm("Delete every bill in the master list?"))return;
+    S.bills=[];save();closeSheet();render();toast("All bills deleted");
+  };
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click",function(e){
+  if(e.target.closest("[data-link]"))return;
+  var t=e.target.closest("[data-tab],[data-period],[data-edit],[data-addentry],[data-editcat],[data-cols],#newCat,#addBill,#addCardBtn,#addLoanBtn,#settingsBtn");
+  if(!t)return;
+  if(t.dataset.tab){ui.tab=t.dataset.tab;render();window.scrollTo(0,0);return}
+  if(t.dataset.period){
+    var ref=(ui.refDay==null)?todayNum():ui.refDay, pr=getPeriod(S.settings,ref), dir=t.dataset.period;
+    ui.refDay=dir==="next"?pr.end:dir==="prev"?pr.start-1:todayNum();
+    render();return;
+  }
+  if(t.dataset.cols){columnsSheet(t.dataset.cols);return}
+  if(t.id==="settingsBtn"){settingsSheet();return}
+  if(t.id==="addBill"){billSheet();return}
+  if(t.id==="addCardBtn"){cardSheet();return}
+  if(t.id==="addLoanBtn"){loanSheet();return}
+  if(t.id==="newCat"){catSheet();return}
+  if(t.dataset.addentry){entrySheet(null,t.dataset.addentry);return}
+  if(t.dataset.editcat){catSheet(t.dataset.editcat);return}
+  if(t.dataset.edit){ if(t.dataset.entry)entrySheet(t.dataset.edit); else if(t.dataset.card)cardSheet(t.dataset.edit); else if(t.dataset.loan)loanSheet(t.dataset.edit); else billSheet(t.dataset.edit); }
+});
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeSheet()});
+
+/* ---------- start ---------- */
+var local=readLocal();
+S=normalize(local||null);
+if(!local){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+render();
+initStore();
+})();
+</script>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",function(){
+    navigator.serviceWorker.register("./sw.js",{scope:"./"}).catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
