@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -225,7 +226,11 @@ function seed(){
   return {
     v:1,
     settings:{schedule:"weekly",weekday:1,anchor:dayNum(2026,8,21),day1:15,day2:31,checkingBalance:0},
-    bills:[],
+    bills:[B("Apple Card",0,1),B("Google One",1.99,2),B("SRP",238.55,3),B("Utilities",60,3),B("Amazon Prime",8.07,4),
+      B("Bank of Ben",100,5),B("Apple iCloud",0.99,5),B("OCCU",0,7),B("Viz Manga",2.99,8),B("Cox Wifi",51.22,9),
+      B("Dropout",5.99,14),B("Firestone",0,15),B("Safeco Auto Insurance",787.53,15),B("Lemonade Renters Insurance",11.92,16),
+      B("Crunchyroll",7.99,18),B("Discover",0,20),B("Apple Care",2.49,20),B("Google One",1.99,21),B("iCloud+",2.99,24),
+      B("All Hearts Foundation",1.35,25),B("LendingClub",300,28)],
     cats:[
       {id:uid(),name:"Groceries",budget:200,kind:"spend",auto:false},
       {id:uid(),name:"Gas",budget:0,kind:"spend",auto:false},
@@ -396,11 +401,11 @@ function viewPeriod(){
     : '<div class="panel"><div class="empty">No bills fall in this pay period.</div></div>';
   var manual=S.cats.filter(function(c){return !c.auto});
   var remaining=manual.reduce(function(t,c){return t+Math.max(0,(c.budget||0)-spentIn(c.id,P))},0);
-  var left=s.checkingBalance-P.coming-remaining;
+  var left=s.checkingBalance-P.due-remaining;
   var ledger=(s.checkingBalance>0&&P.isCurrent)
-    ? '<section><h3>Checking Account</h3><p class="sub">Your balance minus bills still to come and what\'s left of your non-transferred budgets. Categories that move to another account on payday aren\'t subtracted — that money is already gone from checking.</p><ul class="ledger panel">'
+    ? '<section><h3>Checking Account</h3><p class="sub">Your balance minus this period\'s total bills and what\'s left of your non-transferred budgets. Categories that move to another account on payday aren\'t subtracted — that money is already gone from checking.</p><ul class="ledger panel">'
       +'<li><span>Checking Balance</span><span class="num">'+money(s.checkingBalance)+'</span></li>'
-      +'<li><span>Bills Still to Come</span><span class="num">−'+money(P.coming)+'</span></li>'
+      +'<li><span>Bills Total</span><span class="num">−'+money(P.due)+'</span></li>'
       +(manual.length?'<li><span>'+esc(manual.map(function(c){return c.name}).join(", "))+' Left to Spend</span><span class="num">−'+money(remaining)+'</span></li>':'')
       +'<li class="total"><span>Left in Checking</span><span class="num'+(left<0?' neg':'')+'">'+money(left)+'</span></li></ul></section>'
     : '';
@@ -539,7 +544,7 @@ function billSheet(id){
   var days=[];for(var i=1;i<=31;i++)days.push([i,ord(i)]);
   var months=MO.map(function(m,i){return [i,m]});
   openSheet('<h4>'+(id?"Edit Bill":"Add Bill")+'</h4>'
-    +'<div class="field"><label for="bName">Description</label><input id="bName" value="'+esc(b.name)+'" autocomplete="off" placeholder="Internet"></div>'
+    +'<div class="field"><label for="bName">Description</label><input id="bName" value="'+esc(b.name)+'" autocomplete="off" placeholder="Cox Wifi"></div>'
     +'<div class="field"><label for="bLink">Link (Optional)</label><input id="bLink" type="url" value="'+esc(b.url||"")+'" autocomplete="off" placeholder="https://…" inputmode="url"><div class="hint">Opens from the bill\'s name. A website works, or an app\'s own link (e.g. venmo://, chase://) opens straight into that app on your phone.</div></div>'
     +'<div class="field"><label for="bAmt">Amount Due</label><input id="bAmt" inputmode="decimal" value="'+(b.amount===""?"":b.amount)+'" placeholder="0.00"></div>'
     +'<div class="field"><label for="bFreq">Repeats</label><select id="bFreq">'+options([["monthly","Every Month"],["yearly","Once a Year"]],b.freq)+'</select></div>'
@@ -788,17 +793,10 @@ function settingsSheet(){
     save();closeSheet();render();
   };
   document.getElementById("exp").onclick=function(){
-    var fname="budget-backup-"+isoOf(todayNum())+".json", json=JSON.stringify(S,null,2);
-    var c=window.claude&&window.claude.use;
-    if(!c){
-      try{var blob=new Blob([json],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");
-        a.href=u;a.download=fname;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);toast("Backup saved")}
-      catch(e){toast("Couldn't save the backup")}
-      return;
-    }
+    var c=window.claude&&window.claude.use; if(!c){toast("Backup isn't available here");return}
     window.claude.use("downloads").then(function(dl){
       if(!dl){toast("Backup isn't available here");return}
-      return dl.save({filename:fname,data:json}).then(function(){toast("Backup saved")},function(e){if(!e||e.code!=="declined")toast("Couldn't save the backup")});
+      return dl.save({filename:"budget-backup-"+isoOf(todayNum())+".json",data:JSON.stringify(S,null,2)}).then(function(){toast("Backup saved")},function(e){if(!e||e.code!=="declined")toast("Couldn't save the backup")});
     });
   };
   document.getElementById("imp").onclick=function(){document.getElementById("impFile").click()};
@@ -858,9 +856,11 @@ initStore();
 <script>
 if("serviceWorker" in navigator){
   window.addEventListener("load",function(){
-    navigator.serviceWorker.register("./sw.js",{scope:"./"}).catch(function(){});
+    navigator.serviceWorker.register("sw.js").catch(function(){});
   });
 }
 </script>
 </body>
 </html>
+
+</body></html>
