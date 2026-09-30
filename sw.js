@@ -1,6 +1,6 @@
 // Offline support: always try the network first so updates show up right away,
 // and fall back to the saved copy when there's no connection.
-var CACHE = "ppb-v1";
+var CACHE = "ppb-v2";
 var CORE = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./apple-touch-icon-180.png"];
 
 self.addEventListener("install", function (e) {
