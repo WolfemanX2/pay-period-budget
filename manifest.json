@@ -1,9 +1,10 @@
 {
+  "id": "./",
   "name": "Pay Period Budget",
   "short_name": "Budget",
-  "description": "Bills, pay-period tracking, credit cards and loans in one place.",
-  "start_url": ".",
-  "scope": ".",
+  "description": "Bills, pay periods, spending, credit cards and loans.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F2F4EF",
@@ -11,7 +12,6 @@
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
