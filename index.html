@@ -291,7 +291,11 @@ function periodInfo(){
   var p=getPeriod(S.settings,ref);
   var isCurrent=(today>=p.start&&today<p.end);
   var items=[];
-  allBills().forEach(function(b){billDates(b,p.start,p.end).forEach(function(d){items.push({bill:b,date:d,paid:!!(S.paid&&S.paid[b.id+"|"+d])})})});
+  /* A bill due on a weekend is shown on the Friday before. Look two days past the period so a Saturday or Sunday just after it can land on the last Friday inside it. */
+  allBills().forEach(function(b){billDates(b,p.start,p.end+2).forEach(function(raw){
+    var dow=fromDay(raw).getUTCDay(), eff=raw-(dow===6?1:dow===0?2:0);
+    if(eff>=p.start&&eff<p.end)items.push({bill:b,date:eff,raw:raw,paid:!!(S.paid&&S.paid[b.id+"|"+raw])});
+  })});
   items.sort(function(a,b){return a.date-b.date||a.bill.name.localeCompare(b.bill.name)});
   var due=items.reduce(function(t,i){return t+i.bill.amount},0);
   var coming=items.filter(function(i){return i.date>=today&&!i.paid}).reduce(function(t,i){return t+i.bill.amount},0);
@@ -384,11 +388,11 @@ function viewPeriod(){
   var pCols=colsFor("period");
   var rows=P.items.map(function(i){
     var nm=i.bill.url?'<a href="'+esc(i.bill.url)+'" target="_blank" rel="noopener noreferrer" data-link="1">'+esc(i.bill.name)+'</a>':esc(i.bill.name);
-    var key=esc(i.bill.id+"|"+i.date), paidCell;
+    var key=esc(i.bill.id+"|"+i.raw), paidCell;
     if(i.date<P.today)paidCell='';
     else if(i.paid)paidCell='<button class="paid-btn on" data-paid="'+key+'" aria-pressed="true">✓ Paid Early</button>';
     else paidCell='<button class="paid-btn" data-paid="'+key+'" aria-pressed="false">Paid Early</button>';
-    var cellMap={bill:nm+(paidCell?'<div class="paid-row">'+paidCell+'</div>':''),amount:money(i.bill.amount),due:fmtDate(i.date,true)};
+    var cellMap={bill:nm+(paidCell?'<div class="paid-row">'+paidCell+'</div>':''),amount:money(i.bill.amount),due:fmtDate(i.date,true)+(i.raw!==i.date?'<div class="small">Falls on '+fmtDate(i.raw,true)+'</div>':'')};
     return tdRow(pCols,cellMap,(i.date<P.today||i.paid)?' class="past"':'');
   }).join("");
   var table=P.items.length
